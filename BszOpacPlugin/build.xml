@@ -19,9 +19,10 @@
 
 
 	<path id="classpath">
-	    <fileset dir="/opt/digiverso/goobi-jsf2/lib"/> 
+	    <fileset dir="/opt/digiverso/goobilibs/lib"/>
 		<fileset dir="/opt/digiverso/libs" />
 	</path>
+
 
 	<path id="classpath-test">
 	    <fileset dir="/opt/digiverso/goobi-jsf2/lib"/> 
