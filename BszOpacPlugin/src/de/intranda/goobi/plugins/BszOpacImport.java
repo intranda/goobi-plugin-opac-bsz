@@ -1,3 +1,22 @@
+/**
+ * This file is part of the pica opac import plugin for the Goobi Application - a Workflow tool for the support of mass digitization.
+ * 
+ * Visit the websites for more information. 
+ *          - http://digiverso.com 
+ *          - http://www.intranda.com
+ * 
+ * Copyright 2011 - 2013, intranda GmbH, Göttingen
+ * 
+ * This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * 
+ */
 package de.intranda.goobi.plugins;
 
 import java.io.IOException;
@@ -58,6 +77,7 @@ public class BszOpacImport implements IOpacPlugin {
         }
         Catalogue cat =
                 new Catalogue(this.coc.getDescription(), this.coc.getAddress(), this.coc.getPort(), this.coc.getCbs(), this.coc.getDatabase());
+        cat.setProtocol(coc.getProtocol());
         if (verbose) {
             Helper.setMeldung(null, Helper.getTranslation("CatalogueUsage") + ": ", this.coc.getDescription());
         }
@@ -313,7 +333,6 @@ public class BszOpacImport implements IOpacPlugin {
     private void checkMyOpacResult(DigitalDocument inDigDoc, Prefs inPrefs, Element myFirstHit, boolean verbose) {
         UghHelper ughhelp = new UghHelper();
         DocStruct topstruct = inDigDoc.getLogicalDocStruct();
-        DocStruct boundbook = inDigDoc.getPhysicalDocStruct();
         DocStruct topstructChild = null;
         Element mySecondHit = null;
 
@@ -337,6 +356,11 @@ public class BszOpacImport implements IOpacPlugin {
         if (this.gattung.toLowerCase().startsWith("o")) {
             ughhelp.replaceMetadatum(topstruct, inPrefs, "CatalogIDDigital", ppn);
         } else {
+            String ppnAnalog = getElementFieldValue(myFirstHit, "039D", "9");
+            if (ppnAnalog.isEmpty()) {
+                ppnAnalog = getElementFieldValue(myFirstHit, "039I", "9");
+            }
+            ughhelp.replaceMetadatum(topstruct, inPrefs, "CatalogIDDigital", ppnAnalog);
             ughhelp.replaceMetadatum(topstruct, inPrefs, "CatalogIDSource", ppn);
         }
 
@@ -349,6 +373,11 @@ public class BszOpacImport implements IOpacPlugin {
             if (this.gattung.toLowerCase().startsWith("o")) {
                 ughhelp.replaceMetadatum(topstructChild, inPrefs, "CatalogIDDigital", secondHitppn);
             } else {
+                String ppnAnalog = getElementFieldValue(mySecondHit, "039D", "9");
+                if (ppnAnalog.isEmpty()) {
+                    ppnAnalog = getElementFieldValue(mySecondHit, "039I", "9");
+                }
+                ughhelp.replaceMetadatum(topstructChild, inPrefs, "CatalogIDDigital", ppnAnalog);
                 ughhelp.replaceMetadatum(topstructChild, inPrefs, "CatalogIDSource", secondHitppn);
             }
         }
@@ -407,46 +436,7 @@ public class BszOpacImport implements IOpacPlugin {
             // sortingTitle = sortingTitleMulti;
         }
 
-        /*
-         * -------------------------------- Sprachen - Konvertierung auf zwei Stellen --------------------------------
-         */
-        String sprache = getElementFieldValue(myFirstHit, "010@", "a");
-        sprache = ughhelp.convertLanguage(sprache);
-        ughhelp.replaceMetadatum(topstruct, inPrefs, "DocLanguage", sprache);
-
-        /*
-         * -------------------------------- bei multivolumes die Sprachen - Konvertierung auf zwei Stellen --------------------------------
-         */
-        if (topstructChild != null && mySecondHit != null) {
-            String spracheMulti = getElementFieldValue(mySecondHit, "010@", "a");
-            spracheMulti = ughhelp.convertLanguage(spracheMulti);
-            ughhelp.replaceMetadatum(topstructChild, inPrefs, "DocLanguage", spracheMulti);
-        }
-
-        /*
-         * -------------------------------- ISSN --------------------------------
-         */
-        String issn = getElementFieldValue(myFirstHit, "005A", "0");
-        ughhelp.replaceMetadatum(topstruct, inPrefs, "ISSN", issn);
-
-        /*
-         * -------------------------------- Copyright --------------------------------
-         */
-        String copyright = getElementFieldValue(myFirstHit, "037I", "a");
-        ughhelp.replaceMetadatum(boundbook, inPrefs, "copyrightimageset", copyright);
-
-        /*
-         * -------------------------------- Format --------------------------------
-         */
-        String format = getElementFieldValue(myFirstHit, "034I", "a");
-        ughhelp.replaceMetadatum(boundbook, inPrefs, "FormatSourcePrint", format);
-
-        /*
-         * -------------------------------- Umfang --------------------------------
-         */
-        String umfang = getElementFieldValue(myFirstHit, "034D", "a");
-        ughhelp.replaceMetadatum(topstruct, inPrefs, "SizeSourcePrint", umfang);
-
+        
         /*
          * -------------------------------- Signatur --------------------------------
          */
@@ -456,7 +446,11 @@ public class BszOpacImport implements IOpacPlugin {
         }
         sig += getElementFieldValue(myFirstHit, "209A", "f") + " ";
         sig += getElementFieldValue(myFirstHit, "209A", "a");
-        ughhelp.replaceMetadatum(boundbook, inPrefs, "shelfmarksource", sig.trim());
+        if (topstructChild != null && mySecondHit != null) {
+            ughhelp.replaceMetadatum(topstructChild, inPrefs, "shelfmarksource", sig.trim());
+        } else {
+            ughhelp.replaceMetadatum(topstruct, inPrefs, "shelfmarksource", sig.trim());
+        }
         if (sig.trim().length() == 0) {
             myLogger.debug("Signatur part 1: " + sig);
             //            myLogger.debug(myFirstHit.getChildren());
@@ -470,7 +464,11 @@ public class BszOpacImport implements IOpacPlugin {
                 sig += getElementFieldValue(mySecondHit, "209A", "f") + " ";
                 sig += getElementFieldValue(mySecondHit, "209A", "a");
             }
-            ughhelp.replaceMetadatum(boundbook, inPrefs, "shelfmarksource", sig.trim());
+            if (topstructChild != null && mySecondHit != null) {
+                ughhelp.replaceMetadatum(topstructChild, inPrefs, "shelfmarksource", sig.trim());
+            } else {
+                ughhelp.replaceMetadatum(topstruct, inPrefs, "shelfmarksource", sig.trim());
+            }
         }
         myLogger.debug("Signatur full: " + sig);
 
