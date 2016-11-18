@@ -75,8 +75,8 @@ public class BszOpacImport implements IOpacPlugin {
         if (this.coc == null) {
             throw new IOException("Catalogue not found: " + coc.getTitle() + ", please check Configuration in goobi_opac.xml");
         }
-        Catalogue cat =
-                new Catalogue(this.coc.getDescription(), this.coc.getAddress(), this.coc.getPort(), this.coc.getCbs(), this.coc.getDatabase());
+        Catalogue cat = new Catalogue(this.coc.getDescription(), this.coc.getAddress(), this.coc.getPort(), this.coc.getCbs(), this.coc
+                .getDatabase());
         cat.setProtocol(coc.getProtocol());
         if (verbose) {
             Helper.setMeldung(null, Helper.getTranslation("CatalogueUsage") + ": ", this.coc.getDescription());
@@ -116,9 +116,9 @@ public class BszOpacImport implements IOpacPlugin {
         if (gattung.equalsIgnoreCase("af") || gattung.equalsIgnoreCase("Of")) {
 
             /* Sammelband-PPN ermitteln */
-            String multiVolumePpn = getPpnFromParent(myFirstHit, "036F", "9");
+            String multiVolumePpn = getPpnFromParent(myFirstHit, "036D", "9");
             if (multiVolumePpn.isEmpty()) {
-                multiVolumePpn = getPpnFromParent(myFirstHit, "036D", "9");
+                multiVolumePpn = getPpnFromParent(myFirstHit, "036F", "9");
             }
 
             if (!multiVolumePpn.isEmpty()) {
@@ -436,7 +436,6 @@ public class BszOpacImport implements IOpacPlugin {
             // sortingTitle = sortingTitleMulti;
         }
 
-        
         /*
          * -------------------------------- Signatur --------------------------------
          */
@@ -617,7 +616,7 @@ public class BszOpacImport implements IOpacPlugin {
         return "BSZ";
     }
 
-    @Override
+    
     public String getDescription() {
         return "BSZ";
     }
