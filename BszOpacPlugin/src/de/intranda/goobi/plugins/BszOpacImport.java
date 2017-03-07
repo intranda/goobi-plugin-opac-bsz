@@ -436,40 +436,6 @@ public class BszOpacImport implements IOpacPlugin {
             // sortingTitle = sortingTitleMulti;
         }
 
-        /*
-         * -------------------------------- Signatur --------------------------------
-         */
-        String sig = getElementFieldValue(myFirstHit, "209A", "c");
-        if (sig.length() > 0) {
-            sig = "<" + sig + ">";
-        }
-        sig += getElementFieldValue(myFirstHit, "209A", "f") + " ";
-        sig += getElementFieldValue(myFirstHit, "209A", "a");
-        if (topstructChild != null && mySecondHit != null) {
-            ughhelp.replaceMetadatum(topstructChild, inPrefs, "shelfmarksource", sig.trim());
-        } else {
-            ughhelp.replaceMetadatum(topstruct, inPrefs, "shelfmarksource", sig.trim());
-        }
-        if (sig.trim().length() == 0) {
-            myLogger.debug("Signatur part 1: " + sig);
-            //            myLogger.debug(myFirstHit.getChildren());
-            sig = getElementFieldValue(myFirstHit, "209A/01", "c");
-            if (sig.length() > 0) {
-                sig = "<" + sig + ">";
-            }
-            sig += getElementFieldValue(myFirstHit, "209A/01", "f") + " ";
-            sig += getElementFieldValue(myFirstHit, "209A/01", "a");
-            if (mySecondHit != null) {
-                sig += getElementFieldValue(mySecondHit, "209A", "f") + " ";
-                sig += getElementFieldValue(mySecondHit, "209A", "a");
-            }
-            if (topstructChild != null && mySecondHit != null) {
-                ughhelp.replaceMetadatum(topstructChild, inPrefs, "shelfmarksource", sig.trim());
-            } else {
-                ughhelp.replaceMetadatum(topstruct, inPrefs, "shelfmarksource", sig.trim());
-            }
-        }
-        myLogger.debug("Signatur full: " + sig);
 
         /*
          * -------------------------------- Ats Tsl Vorbereitung --------------------------------
@@ -585,19 +551,21 @@ public class BszOpacImport implements IOpacPlugin {
     public ConfigOpacDoctype getOpacDocType() {
         try {
             ConfigOpac co = new ConfigOpac();
+//            ConfigOpac co = ConfigOpac.getInstance();
+
             ConfigOpacDoctype cod = co.getDoctypeByMapping(this.gattung.substring(0, 2), this.coc.getTitle());
             if (cod == null) {
                 if (verbose) {
                     Helper.setFehlerMeldung(Helper.getTranslation("CatalogueUnKnownType") + ": ", this.gattung);
                 }
-                cod = new ConfigOpac().getAllDoctypes().get(0);
+                cod = co.getAllDoctypes().get(0);
                 this.gattung = cod.getMappings().get(0);
                 if (verbose) {
                     Helper.setFehlerMeldung(Helper.getTranslation("CatalogueChangeDocType") + ": ", this.gattung + " - " + cod.getTitle());
                 }
             }
             return cod;
-        } catch (IOException e) {
+        } catch (Exception e) {
             myLogger.error("OpacDoctype unknown", e);
             if (verbose) {
                 Helper.setFehlerMeldung(Helper.getTranslation("CatalogueUnKnownType"), e);
