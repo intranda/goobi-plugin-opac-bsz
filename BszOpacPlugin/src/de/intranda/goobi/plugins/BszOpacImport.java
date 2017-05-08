@@ -550,8 +550,8 @@ public class BszOpacImport implements IOpacPlugin {
     @Override
     public ConfigOpacDoctype getOpacDocType() {
         try {
-            ConfigOpac co = new ConfigOpac();
-//            ConfigOpac co = ConfigOpac.getInstance();
+//            ConfigOpac co = new ConfigOpac();
+            ConfigOpac co = ConfigOpac.getInstance();
 
             ConfigOpacDoctype cod = co.getDoctypeByMapping(this.gattung.substring(0, 2), this.coc.getTitle());
             if (cod == null) {
